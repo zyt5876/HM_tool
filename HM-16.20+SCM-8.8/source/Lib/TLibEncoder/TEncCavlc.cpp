@@ -38,6 +38,7 @@
 #include "../TLibCommon/CommonDef.h"
 #include "TEncCavlc.h"
 #include "SEIwrite.h"
+#include "../App/TAppEncoder/fault_tolerance.h"
 
 //! \ingroup TLibEncoder
 //! \{
@@ -819,7 +820,7 @@ Void TEncCavlc::codeVPS( const TComVPS* pcVPS )
   //future extensions here..
   xWriteRbspTrailingBits();
 }
-
+//cy--±àÂësliceÍ·
 Void TEncCavlc::codeSliceHeader         ( TComSlice* pcSlice )
 {
 #if ENC_DEC_TRACE
@@ -846,7 +847,19 @@ Void TEncCavlc::codeSliceHeader         ( TComSlice* pcSlice )
   //write slice address
   const Int sliceSegmentRsAddress = pcSlice->getPic()->getPicSym()->getCtuTsToRsAddrMap(ctuTsAddress);
 
-  WRITE_FLAG( sliceSegmentRsAddress==0, "first_slice_segment_in_pic_flag" );
+  //cy**WRITE_FLAG( sliceSegmentRsAddress==0, "first_slice_segment_in_pic_flag" );
+  erro_start();
+  erro_add();
+  int flag = erro_get();
+  if (pcSlice->getSliceType() == P_SLICE && flag == 999) {
+	WRITE_FLAG( sliceSegmentRsAddress==1, "first_slice_segment_in_pic_flag" );
+	printf("\n\n**********yes************\n\n");
+  }
+  else
+  {
+	WRITE_FLAG( sliceSegmentRsAddress==0, "first_slice_segment_in_pic_flag" );
+  }
+  //end
   if ( pcSlice->getRapPicFlag() )
   {
     WRITE_FLAG( pcSlice->getNoOutputPriorPicsFlag() ? 1 : 0, "no_output_of_prior_pics_flag" );
@@ -1178,7 +1191,16 @@ Void TEncCavlc::codeSliceHeader         ( TComSlice* pcSlice )
 
     if(pcSlice->getPPS()->getLoopFilterAcrossSlicesEnabledFlag() && ( isSAOEnabled || isDBFEnabled ))
     {
-      WRITE_FLAG(pcSlice->getLFCrossSliceBoundaryFlag()?1:0, "slice_loop_filter_across_slices_enabled_flag");
+      //cy**WRITE_FLAG(pcSlice->getLFCrossSliceBoundaryFlag()?1:0, "slice_loop_filter_across_slices_enabled_flag");
+		if (flag > 5) {
+			WRITE_FLAG(pcSlice->getLFCrossSliceBoundaryFlag()?0:1, "slice_loop_filter_across_slices_enabled_flag");
+		}
+		else
+		{
+			WRITE_FLAG(pcSlice->getLFCrossSliceBoundaryFlag()?1:0, "slice_loop_filter_across_slices_enabled_flag");
+		}
+		//end
+      //WRITE_FLAG(pcSlice->getLFCrossSliceBoundaryFlag()?1:0, "slice_loop_filter_across_slices_enabled_flag");
     }
   }
   if(pcSlice->getPPS()->getSliceHeaderExtensionPresentFlag())

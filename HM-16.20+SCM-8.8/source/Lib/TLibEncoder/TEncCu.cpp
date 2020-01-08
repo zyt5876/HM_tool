@@ -1548,6 +1548,7 @@ Int TEncCu::xComputeQP( TComDataCU* pcCU, UInt uiDepth )
  * \param uiDepth
  * \returns Void
  */
+//cy--µÝ¹éµØ±àÂëÒ»¸öCU
 Void TEncCu::xEncodeCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
 {
         TComPic   *const pcPic   = pcCU->getPic();
